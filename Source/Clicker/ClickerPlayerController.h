@@ -13,5 +13,8 @@ UCLASS()
 class CLICKER_API AClickerPlayerController : public APlayerController
 {
 	GENERATED_BODY()
+
+protected:
+	virtual void BeginPlay() override;
 	
 };
