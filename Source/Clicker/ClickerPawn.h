@@ -32,7 +32,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly) TObjectPtr<UCameraComponent> MainCamera;
 	UPROPERTY(EditDefaultsOnly) TObjectPtr<UTextRenderComponent> ScoreText;
 	UPROPERTY(EditDefaultsOnly) TObjectPtr <UCurveFloat> CurveFloat;
-	UPROPERTY(EditDefaultsOnly) TObjectPtr <USceneComponent> RootComp;
+	UPROPERTY(EditDefaultsOnly) TObjectPtr <USceneComponent> ClickerRoot;
 
 	UPROPERTY() int32 Score = 0;
 	UPROPERTY() int32 ClickPower = 1;
