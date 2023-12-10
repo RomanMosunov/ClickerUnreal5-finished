@@ -3,7 +3,7 @@
 Developed with Unreal Engine 5
 How to open:
 
-Download the .zip file with the project
+Download the .zip file with the project;
 Click RMB on .uproject;
 Generate Visual wtudio project files;
 Open .sln file;
