@@ -11,7 +11,7 @@ How to open:
 6. Check that the path to the project contains Cyrillic characters!;
 7. In game, open the Main map for the game if it hasn't opened by default;
 
-#Демо версия игры Кликер, написанная на UE4 С++ без блюпринтов. Как открыть:
+#Демо версия игры Кликер, написанная на UE5 С++. Как открыть:
 
 1. Загрузите .zip файл с проектом
 2. Щелкните ПКМ на файле .uproject;
