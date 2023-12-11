@@ -17,11 +17,15 @@ AClickerPawn::AClickerPawn()
 	MainCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("MainCamera"));
 	ScoreText = CreateDefaultSubobject<UTextRenderComponent>(TEXT("ScoreText"));
 	ClickerRoot = CreateDefaultSubobject<USceneComponent>(TEXT("ClickerRoot"));
+	ClickPowerBtn = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ClickPowerBtn"));
+	ClickPowerTxt = CreateDefaultSubobject<UTextRenderComponent>(TEXT("ClickPowerTxt"));
 
 	check(ClickerRoot);
 	check(ClickerMesh);
 	check(MainCamera);
 	check(ScoreText);
+	check(ClickPowerBtn);
+	check(ClickPowerTxt);
 
 	SetRootComponent(ClickerRoot);
 
@@ -29,11 +33,17 @@ AClickerPawn::AClickerPawn()
 	ClickerMesh->SetRelativeLocation(FVector::ZeroVector);
 
 	MainCamera->SetupAttachment(ClickerRoot);
-	MainCamera->SetRelativeLocation(FVector(-600, 400, 200));
+	MainCamera->SetRelativeLocation(FVector(-600.0, 400.0, 200.0));
 
 	ScoreText->SetupAttachment(ClickerRoot);
-	ScoreText->SetRelativeTransform(FTransform(FRotator(0, 180, 0), FVector(0, 0, 200.0), FVector::OneVector));
+	ScoreText->SetRelativeTransform(FTransform(FRotator(0.0, 180.0, 0.0), FVector(0.0, 0.0, 200.0), FVector::OneVector));
 	ScoreText->SetWorldSize(100);
+
+	ClickPowerBtn->SetupAttachment(ClickerRoot);
+	ClickPowerBtn->SetRelativeLocation(FVector(0.0, 500.0, 400.0));
+
+	ClickPowerTxt->SetupAttachment(ClickerRoot);
+	ClickPowerTxt->SetRelativeTransform(FTransform(FRotator(0.0, 180.0, 0.0), FVector(0.0, 600.0, 350.0), FVector::OneVector));
 
 	ClickerMesh->OnClicked.AddDynamic(this, &AClickerPawn::ClickEvent);
 }
@@ -42,6 +52,9 @@ AClickerPawn::AClickerPawn()
 void AClickerPawn::BeginPlay()
 {
 	Super::BeginPlay();
+
+	ClickPowerMat = ClickPowerBtn->CreateAndSetMaterialInstanceDynamic(0);
+
 	if (CurveFloat)
 	{
 		FOnTimelineFloat TimelineProgress;
@@ -55,6 +68,7 @@ void AClickerPawn::ClickEvent(UPrimitiveComponent* TouchedComponent, FKey Button
 	Score += ClickPower;
 	ScoreText->SetText(FText::AsNumber(Score));
 	CurveTimeline.PlayFromStart();
+	
 }
 
 void AClickerPawn::TimelineProgress(const float Value)

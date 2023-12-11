@@ -29,20 +29,24 @@ protected:
 	FTimeline CurveTimeline;
 
 	UPROPERTY(EditDefaultsOnly) TObjectPtr<UStaticMeshComponent> ClickerMesh;
+	UPROPERTY(EditDefaultsOnly) TObjectPtr<UStaticMeshComponent> ClickPowerBtn;
 	UPROPERTY(EditDefaultsOnly) TObjectPtr<UCameraComponent> MainCamera;
 	UPROPERTY(EditDefaultsOnly) TObjectPtr<UTextRenderComponent> ScoreText;
+	UPROPERTY(EditDefaultsOnly) TObjectPtr<UTextRenderComponent> ClickPowerTxt;
 	UPROPERTY(EditDefaultsOnly) TObjectPtr <UCurveFloat> CurveFloat;
 	UPROPERTY(EditDefaultsOnly) TObjectPtr <USceneComponent> ClickerRoot;
 
-	UPROPERTY() int32 Score = 0;
-	UPROPERTY() int32 ClickPower = 1;
+	bool ClickPowerAvailable;
+	int32 Score = 0;
+	int32 ClickPower = 1;
+	int32 ClickPowerAds = 1;
+	int32 ClickPowerCost = 4;
+	UMaterialInstanceDynamic* ClickPowerMat;
 
 	UFUNCTION() void ClickEvent(UPrimitiveComponent* TouchedComponent, FKey ButtonPressed);
 	UFUNCTION() void TimelineProgress(const float Value);
 
 public:	
 	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-	
+	virtual void Tick(float DeltaTime) override;	
 };
