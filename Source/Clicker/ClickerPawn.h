@@ -36,15 +36,18 @@ protected:
 	UPROPERTY(EditDefaultsOnly) TObjectPtr <UCurveFloat> CurveFloat;
 	UPROPERTY(EditDefaultsOnly) TObjectPtr <USceneComponent> ClickerRoot;
 
-	bool ClickPowerAvailable;
+	bool ClickPowerAvailable = false;
 	int32 Score = 0;
 	int32 ClickPower = 1;
-	int32 ClickPowerAds = 1;
+	int32 ClickPowerAdds = 1;
 	int32 ClickPowerCost = 4;
 	UMaterialInstanceDynamic* ClickPowerMat;
 
 	UFUNCTION() void ClickEvent(UPrimitiveComponent* TouchedComponent, FKey ButtonPressed);
+	UFUNCTION() void BuyClickPower(UPrimitiveComponent* TouchedComponent, FKey ButtonPressed);
 	UFUNCTION() void TimelineProgress(const float Value);
+
+	void UpdateShop();
 
 public:	
 	// Called every frame

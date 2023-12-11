@@ -44,8 +44,10 @@ AClickerPawn::AClickerPawn()
 
 	ClickPowerTxt->SetupAttachment(ClickerRoot);
 	ClickPowerTxt->SetRelativeTransform(FTransform(FRotator(0.0, 180.0, 0.0), FVector(0.0, 600.0, 350.0), FVector::OneVector));
+	ClickPowerTxt->SetWorldSize(50);
 
 	ClickerMesh->OnClicked.AddDynamic(this, &AClickerPawn::ClickEvent);
+	ClickPowerBtn->OnClicked.AddDynamic(this, &AClickerPawn::BuyClickPower);
 }
 
 // Called when the game starts or when spawned
@@ -54,21 +56,32 @@ void AClickerPawn::BeginPlay()
 	Super::BeginPlay();
 
 	ClickPowerMat = ClickPowerBtn->CreateAndSetMaterialInstanceDynamic(0);
-
+	
 	if (CurveFloat)
 	{
 		FOnTimelineFloat TimelineProgress;
 		TimelineProgress.BindUFunction(this, FName("TimelineProgress"));
 		CurveTimeline.AddInterpFloat(CurveFloat, TimelineProgress);
+		AClickerPawn::UpdateShop();
 	}
 }
 
 void AClickerPawn::ClickEvent(UPrimitiveComponent* TouchedComponent, FKey ButtonPressed)
 {
 	Score += ClickPower;
-	ScoreText->SetText(FText::AsNumber(Score));
+	AClickerPawn::UpdateShop();
 	CurveTimeline.PlayFromStart();
-	
+}
+
+void AClickerPawn::BuyClickPower(UPrimitiveComponent* TouchedComponent, FKey ButtonPressed)
+{
+	if (ClickPowerAvailable)
+	{
+		Score -= ClickPowerCost;
+		ClickPower += ClickPowerAdds;
+		ClickPowerCost *= 2;
+		AClickerPawn::UpdateShop();
+	}
 }
 
 void AClickerPawn::TimelineProgress(const float Value)
@@ -77,6 +90,25 @@ void AClickerPawn::TimelineProgress(const float Value)
 	const FVector EndScale = FVector(0.8, 0.8, 0.8);
 	const FVector NewScale = FMath::Lerp(StartScale, EndScale, Value);
 	ClickerMesh->SetRelativeScale3D(NewScale);
+}
+
+void AClickerPawn::UpdateShop()
+{
+	FString Active = FString::Printf(TEXT("Click power: %d \n Next level: %d"), ClickPower, ClickPowerCost);
+	ClickPowerTxt->SetText(FText::FromString(Active));
+	ScoreText->SetText(FText::AsNumber(Score));
+
+	if (Score >= ClickPowerCost)
+	{
+		ClickPowerAvailable = true;
+		ClickPowerMat->SetVectorParameterValue("Color", FLinearColor(0.2, 1.0, 0.2));
+		//ClickPowerMat->SetVectorParameterValue("Color", FLinearColor::Green);
+	}
+	else
+	{
+		ClickPowerAvailable = false;
+		ClickPowerMat->SetVectorParameterValue("Color", FLinearColor::Gray);
+	}
 }
 
 // Called every frame
