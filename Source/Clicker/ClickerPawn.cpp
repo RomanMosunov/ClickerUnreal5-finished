@@ -19,6 +19,8 @@ AClickerPawn::AClickerPawn()
 	ClickerRoot = CreateDefaultSubobject<USceneComponent>(TEXT("ClickerRoot"));
 	ClickPowerBtn = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ClickPowerBtn"));
 	ClickPowerTxt = CreateDefaultSubobject<UTextRenderComponent>(TEXT("ClickPowerTxt"));
+	PassiveIncomeBtn = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PassiveIncomeBtn"));
+	PassiveIncomeTxt = CreateDefaultSubobject<UTextRenderComponent>(TEXT("PassiveIncomeTxt"));
 
 	check(ClickerRoot);
 	check(ClickerMesh);
@@ -26,6 +28,8 @@ AClickerPawn::AClickerPawn()
 	check(ScoreText);
 	check(ClickPowerBtn);
 	check(ClickPowerTxt);
+	check(PassiveIncomeBtn);
+	check(PassiveIncomeTxt);
 
 	SetRootComponent(ClickerRoot);
 
@@ -46,8 +50,16 @@ AClickerPawn::AClickerPawn()
 	ClickPowerTxt->SetRelativeTransform(FTransform(FRotator(0.0, 180.0, 0.0), FVector(0.0, 600.0, 350.0), FVector::OneVector));
 	ClickPowerTxt->SetWorldSize(50);
 
+	PassiveIncomeBtn->SetupAttachment(ClickerRoot);
+	PassiveIncomeBtn->SetRelativeLocation(FVector(0.0, 500.0, 200.0));
+	
+	PassiveIncomeTxt->SetupAttachment(ClickerRoot);
+	PassiveIncomeTxt->SetRelativeTransform(FTransform(FRotator(0.0, 180.0, 0.0), FVector(0.0, 600.0, 200.0), FVector::OneVector));
+	PassiveIncomeTxt->SetWorldSize(50);
+
 	ClickerMesh->OnClicked.AddDynamic(this, &AClickerPawn::ClickEvent);
 	ClickPowerBtn->OnClicked.AddDynamic(this, &AClickerPawn::BuyClickPower);
+	PassiveIncomeBtn->OnClicked.AddDynamic(this, &AClickerPawn::BuyScorePerSecond);
 }
 
 // Called when the game starts or when spawned
@@ -56,12 +68,35 @@ void AClickerPawn::BeginPlay()
 	Super::BeginPlay();
 
 	ClickPowerMat = ClickPowerBtn->CreateAndSetMaterialInstanceDynamic(0);
+	PassiveIncomeMat = PassiveIncomeBtn->CreateAndSetMaterialInstanceDynamic(0);
 	
 	if (CurveFloat)
 	{
 		FOnTimelineFloat TimelineProgress;
 		TimelineProgress.BindUFunction(this, FName("TimelineProgress"));
 		CurveTimeline.AddInterpFloat(CurveFloat, TimelineProgress);
+		AClickerPawn::UpdateShop();
+	}
+
+	if (!EverySecond.IsValid())
+	{
+		GetWorldTimerManager().SetTimer(EverySecond, this, &AClickerPawn::AddScorePerSecond, 1.0, true);
+	}
+}
+
+void AClickerPawn::AddScorePerSecond()
+{
+	Score += PassiveIncome;
+	AClickerPawn::UpdateShop();
+}
+
+void AClickerPawn::BuyScorePerSecond(UPrimitiveComponent* TouchedComponent, FKey ButtonPressed)
+{
+	if (PassiveIncomeAvailable)
+	{
+		Score -= PassiveIncomeCost;
+		PassiveIncome += 1;
+		PassiveIncomeCost *= 2;
 		AClickerPawn::UpdateShop();
 	}
 }
@@ -95,7 +130,9 @@ void AClickerPawn::TimelineProgress(const float Value)
 void AClickerPawn::UpdateShop()
 {
 	FString Active = FString::Printf(TEXT("Click power: %d \n Next level: %d"), ClickPower, ClickPowerCost);
+	FString Passive = FString::Printf(TEXT("Score per second: %d \n Next level: %d"), PassiveIncome, PassiveIncomeCost);
 	ClickPowerTxt->SetText(FText::FromString(Active));
+	PassiveIncomeTxt->SetText(FText::FromString(Passive));
 	ScoreText->SetText(FText::AsNumber(Score));
 
 	if (Score >= ClickPowerCost)
@@ -109,6 +146,18 @@ void AClickerPawn::UpdateShop()
 		ClickPowerAvailable = false;
 		ClickPowerMat->SetVectorParameterValue("Color", FLinearColor::Gray);
 	}
+
+	if (Score >= PassiveIncomeCost)
+	{
+		PassiveIncomeAvailable = true;
+		PassiveIncomeMat->SetVectorParameterValue("Color", FLinearColor(0.2, 1.0, 0.2));
+	}
+	else
+	{
+		PassiveIncomeAvailable = false;
+		PassiveIncomeMat->SetVectorParameterValue("Color", FLinearColor::Gray);
+	}
+
 }
 
 // Called every frame
