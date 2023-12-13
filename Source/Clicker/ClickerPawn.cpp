@@ -13,6 +13,7 @@ AClickerPawn::AClickerPawn()
 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	//Create components of class
 	ClickerMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ClickerMesh"));
 	MainCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("MainCamera"));
 	ScoreText = CreateDefaultSubobject<UTextRenderComponent>(TEXT("ScoreText"));
@@ -31,6 +32,7 @@ AClickerPawn::AClickerPawn()
 	check(PassiveIncomeBtn);
 	check(PassiveIncomeTxt);
 
+	//Setup component Defaults
 	SetRootComponent(ClickerRoot);
 
 	ClickerMesh->SetupAttachment(ClickerRoot);
@@ -57,6 +59,7 @@ AClickerPawn::AClickerPawn()
 	PassiveIncomeTxt->SetRelativeTransform(FTransform(FRotator(0.0, 180.0, 0.0), FVector(0.0, 600.0, 200.0), FVector::OneVector));
 	PassiveIncomeTxt->SetWorldSize(50);
 
+	//Set OnClick Events
 	ClickerMesh->OnClicked.AddDynamic(this, &AClickerPawn::ClickEvent);
 	ClickPowerBtn->OnClicked.AddDynamic(this, &AClickerPawn::BuyClickPower);
 	PassiveIncomeBtn->OnClicked.AddDynamic(this, &AClickerPawn::BuyScorePerSecond);
@@ -67,21 +70,24 @@ void AClickerPawn::BeginPlay()
 {
 	Super::BeginPlay();
 
+	//Create material instances
 	ClickPowerMat = ClickPowerBtn->CreateAndSetMaterialInstanceDynamic(0);
 	PassiveIncomeMat = PassiveIncomeBtn->CreateAndSetMaterialInstanceDynamic(0);
 	
+	//Add Float track for "Timeline" function
 	if (CurveFloat)
 	{
 		FOnTimelineFloat TimelineProgress;
 		TimelineProgress.BindUFunction(this, FName("TimelineProgress"));
 		CurveTimeline.AddInterpFloat(CurveFloat, TimelineProgress);
-		AClickerPawn::UpdateShop();
 	}
 
+	// Set timer for "Passive income" function
 	if (!EverySecond.IsValid())
 	{
 		GetWorldTimerManager().SetTimer(EverySecond, this, &AClickerPawn::AddScorePerSecond, 1.0, true);
 	}
+		AClickerPawn::UpdateShop();
 }
 
 void AClickerPawn::AddScorePerSecond()
@@ -119,6 +125,7 @@ void AClickerPawn::BuyClickPower(UPrimitiveComponent* TouchedComponent, FKey But
 	}
 }
 
+//Timeline function (simple animation)
 void AClickerPawn::TimelineProgress(const float Value)
 {
 	const FVector StartScale = FVector::OneVector;
@@ -127,42 +134,51 @@ void AClickerPawn::TimelineProgress(const float Value)
 	ClickerMesh->SetRelativeScale3D(NewScale);
 }
 
+//base function, that updates shop state every second
 void AClickerPawn::UpdateShop()
 {
+	//Format String data and Setup Text components
 	FString Active = FString::Printf(TEXT("Click power: %d \n Next level: %d"), ClickPower, ClickPowerCost);
 	FString Passive = FString::Printf(TEXT("Score per second: %d \n Next level: %d"), PassiveIncome, PassiveIncomeCost);
 	ClickPowerTxt->SetText(FText::FromString(Active));
 	PassiveIncomeTxt->SetText(FText::FromString(Passive));
 	ScoreText->SetText(FText::AsNumber(Score));
 
-	if (Score >= ClickPowerCost)
+	//Dynamic update for material color
 	{
-		ClickPowerAvailable = true;
-		ClickPowerMat->SetVectorParameterValue("Color", FLinearColor(0.2, 1.0, 0.2));
-		//ClickPowerMat->SetVectorParameterValue("Color", FLinearColor::Green);
+		if (ClickPowerMat)
+			if (Score >= ClickPowerCost)
+			{
+				ClickPowerAvailable = true;
+				ClickPowerMat->SetVectorParameterValue("Color", FLinearColor(0.2, 1.0, 0.2));
+				//ClickPowerMat->SetVectorParameterValue("Color", FLinearColor::Green);
+			}
+			else
+			{
+				ClickPowerAvailable = false;
+				ClickPowerMat->SetVectorParameterValue("Color", FLinearColor::Gray);
+			}
 	}
-	else
+	if(PassiveIncomeMat)
 	{
-		ClickPowerAvailable = false;
-		ClickPowerMat->SetVectorParameterValue("Color", FLinearColor::Gray);
+		if (Score >= PassiveIncomeCost)
+		{
+			PassiveIncomeAvailable = true;
+			PassiveIncomeMat->SetVectorParameterValue("Color", FLinearColor(0.2, 1.0, 0.2));
+		}
+		else
+		{
+			PassiveIncomeAvailable = false;
+			PassiveIncomeMat->SetVectorParameterValue("Color", FLinearColor::Gray);
+		}
 	}
-
-	if (Score >= PassiveIncomeCost)
-	{
-		PassiveIncomeAvailable = true;
-		PassiveIncomeMat->SetVectorParameterValue("Color", FLinearColor(0.2, 1.0, 0.2));
-	}
-	else
-	{
-		PassiveIncomeAvailable = false;
-		PassiveIncomeMat->SetVectorParameterValue("Color", FLinearColor::Gray);
-	}
-
 }
 
 // Called every frame
 void AClickerPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	//Get Delta time for Timeline animation
 	CurveTimeline.TickTimeline(DeltaTime);
 }
